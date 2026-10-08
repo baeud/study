@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Tugas & Misi - BAEUDA</title><link rel="stylesheet" href="styles.css" /></head>
+<body class="focus-page auth-pending">
+  <header class="focus-topbar"><a class="focus-brand" href="dashboard.html"><span class="brand-mark">🐻</span><strong>BAEUDA</strong></a><a class="small-btn" href="features.html">← Semua fitur</a></header>
+  <main class="focus-main">
+    <section class="focus-heading"><div><p class="eyebrow">Tetap konsisten</p><h1>Tugas & misi.</h1><p>Pecah target besar menjadi beberapa langkah yang bisa kamu selesaikan hari ini.</p></div></section>
+    <section class="focus-card daily-quest" aria-labelledby="daily-quest-title">
+      <div class="daily-quest-heading">
+        <div><p class="eyebrow">Misi harian</p><h2 id="daily-quest-title">Dua soal matematika hari ini</h2></div>
+        <span class="daily-quest-date" id="daily-quest-date"></span>
+      </div>
+      <p>Jawab dua soal untuk menyelesaikan misi hari ini. Soal berganti setiap hari.</p>
+      <strong class="daily-quest-progress" id="daily-quest-progress" aria-live="polite"></strong>
+      <div class="daily-question-list" id="daily-question-list"></div>
+    </section>
+    <section class="focus-card"><h2>Daftar langkahmu</h2><p>Centang satu per satu. Daftar ini tersimpan khusus untuk akunmu.</p><div class="focus-list" id="task-list"></div><form class="focus-form" id="task-form"><input id="task-input" maxlength="70" placeholder="Contoh: ulangi rumus energi" required /><button class="btn brand" type="submit">Tambah tugas</button></form></section>
+  </main>
+  <script type="module">
+    import { requireAuth } from './auth-guard.js';
+    requireAuth(user => {
+      const key = `baeudaTasks:${user.uid}`;
+      const defaults = [{ text: 'Selesaikan satu mini game', done: false }, { text: 'Belajar selama 25 menit', done: false }, { text: 'Baca satu materi baru', done: false }];
+      const read = () => { try { return JSON.parse(localStorage.getItem(key)) || defaults; } catch { return defaults; } };
+      const save = tasks => localStorage.setItem(key, JSON.stringify(tasks));
+      const dailyQuestions = [
+        { level: 'Easy', question: 'Hasil dari 5x − 3x + 7 adalah ...', options: ['2x + 7', '8x + 7', '2x − 7', '8x − 7'], answer: 0 },
+        { level: 'Easy', question: 'Nilai dari 2⁴ + 3² adalah ...', options: ['17', '21', '25', '27'], answer: 2 },
+        { level: 'Easy', question: 'Hasil dari 4√3 + 2√3 adalah ...', options: ['6√3', '6√6', '8√3', '8√6'], answer: 0 },
+        { level: 'Easy', question: 'Jika x = 5, nilai dari 2x + 8 adalah ...', options: ['13', '15', '18', '20'], answer: 2 },
+        { level: 'Easy', question: 'Nilai dari √196 adalah ...', options: ['12', '13', '14', '16'], answer: 2 },
+        { level: 'Easy', question: 'Harga sebuah buku adalah Rp40.000,00. Jika mendapat diskon 10%, harga buku setelah diskon adalah ...', options: ['Rp34.000,00', 'Rp36.000,00', 'Rp38.000,00', 'Rp39.000,00'], answer: 1 },
+        { level: 'Easy', question: 'Rata-rata dari nilai 70, 80, 75, dan 95 adalah ...', options: ['75', '78', '80', '82'], answer: 2 },
+        { level: 'Medium', question: 'Hasil dari 3(2x + 4) − 2x adalah ...', options: ['4x + 4', '4x + 12', '6x + 4', '8x + 12'], answer: 1 },
+        { level: 'Medium', question: 'Hasil dari √72 − √8 adalah ...', options: ['2√2', '4√2', '6√2', '8√2'], answer: 1 },
+        { level: 'Medium', question: 'Sebuah persegi memiliki luas 225 cm². Panjang sisi persegi tersebut adalah ...', options: ['12 cm', '15 cm', '18 cm', '20 cm'], answer: 1 },
+        { level: 'Medium', question: 'Ayah memiliki 80 kg beras. Sebanyak 3/8 bagian diberikan kepada tetangga. Berapa kg beras yang tersisa?', options: ['30 kg', '40 kg', '50 kg', '55 kg'], answer: 2 },
+        { level: 'Medium', question: 'Sebuah jaket seharga Rp250.000,00 mendapat diskon 20%. Harga setelah diskon adalah ...', options: ['Rp180.000,00', 'Rp190.000,00', 'Rp200.000,00', 'Rp210.000,00'], answer: 2 },
+        { level: 'Medium', question: 'Sebuah bilangan jika dikalikan 3 kemudian dikurangi 5 menghasilkan 25. Bilangan tersebut adalah ...', options: ['8', '9', '10', '12'], answer: 2 },
+        { level: 'Medium', question: 'Hasil dari 2√5 + 3√5 − √5 adalah ...', options: ['3√5', '4√5', '5√5', '6√5'], answer: 1 },
+        { level: 'Hard', question: 'Jumlah umur Ayah dan Anak sekarang adalah 56 tahun. Umur Ayah 3 kali umur Anak. Berapakah umur Anak?', options: ['12 tahun', '14 tahun', '16 tahun', '18 tahun'], answer: 1 },
+        { level: 'Hard', question: 'Sebuah toko memiliki sejumlah pensil. Sebanyak 3/5 bagian pensil terjual dan tersisa 24 pensil. Berapa jumlah pensil mula-mula?', options: ['40', '50', '60', '80'], answer: 2 },
+        { level: 'Hard', question: 'Sebuah kubus memiliki volume 729 cm³. Panjang rusuk kubus tersebut adalah ...', options: ['7 cm', '8 cm', '9 cm', '10 cm'], answer: 2 },
+        { level: 'Hard', question: 'Tiga tahun yang lalu, umur Kakak adalah 2 kali umur Adik. Sekarang jumlah umur mereka adalah 36 tahun. Berapakah umur Kakak sekarang?', options: ['21 tahun', '22 tahun', '23 tahun', '24 tahun'], answer: 2 },
+        { level: 'Hard', question: 'Sebuah persegi panjang memiliki panjang (x + 2) cm dan lebar (x − 2) cm. Jika luasnya 45 cm², nilai x adalah ...', options: ['5', '6', '7', '8'], answer: 2 },
+        { level: 'Hard', question: 'Sebuah lapangan berbentuk persegi memiliki luas 392 m². Panjang sisi lapangan tersebut adalah ...', options: ['12√2 m', '14√2 m', '16√2 m', '18√2 m'], answer: 1 }
+      ];
+      const today = new Date();
+      const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const dayNumber = Math.floor(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000);
+      const firstQuestion = (dayNumber % (dailyQuestions.length / 2)) * 2;
+      const todaysQuestions = dailyQuestions.slice(firstQuestion, firstQuestion + 2);
+      const dailyKey = `baeudaDailyMath:${user.uid}:${dateKey}`;
+      const readDailyAnswers = () => {
+        try { return JSON.parse(localStorage.getItem(dailyKey)) || {}; }
+        catch { return {}; }
+      };
+      const renderDailyQuestions = () => {
+        const answers = readDailyAnswers();
+        const questionList = document.getElementById('daily-question-list');
+        questionList.replaceChildren();
+        document.getElementById('daily-quest-date').textContent = today.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
+
+        todaysQuestions.forEach((question, questionIndex) => {
+          const questionId = String(firstQuestion + questionIndex);
+          const selectedAnswer = answers[questionId];
+          const questionCard = document.createElement('article');
+          questionCard.className = 'daily-question';
+
+          const heading = document.createElement('div');
+          heading.className = 'daily-question-meta';
+          heading.textContent = `Soal ${questionIndex + 1} · Level ${question.level}`;
+          questionCard.append(heading);
+
+          const prompt = document.createElement('p');
+          prompt.className = 'daily-question-prompt';
+          prompt.textContent = question.question;
+          questionCard.append(prompt);
+
+          const choices = document.createElement('div');
+          choices.className = 'daily-question-options';
+          choices.setAttribute('role', 'group');
+          choices.setAttribute('aria-label', `Pilihan jawaban soal ${questionIndex + 1}`);
+          question.options.forEach((option, optionIndex) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'daily-question-choice';
+            button.textContent = option;
+            button.disabled = selectedAnswer !== undefined;
+            if (selectedAnswer !== undefined && optionIndex === question.answer) button.classList.add('correct');
+            if (selectedAnswer === optionIndex && selectedAnswer !== question.answer) button.classList.add('incorrect');
+            button.addEventListener('click', () => {
+              const currentAnswers = readDailyAnswers();
+              currentAnswers[questionId] = optionIndex;
+              localStorage.setItem(dailyKey, JSON.stringify(currentAnswers));
+              renderDailyQuestions();
+            });
+            choices.append(button);
+          });
+          questionCard.append(choices);
+
+          if (selectedAnswer !== undefined) {
+            const feedback = document.createElement('p');
+            feedback.className = `daily-question-feedback ${selectedAnswer === question.answer ? 'correct' : 'incorrect'}`;
+            feedback.setAttribute('role', 'status');
+            feedback.textContent = selectedAnswer === question.answer
+              ? 'Benar! Misi soal ini selesai 🎉'
+              : `Belum tepat. Jawaban yang benar: ${question.options[question.answer]}`;
+            questionCard.append(feedback);
+          }
+
+          questionList.append(questionCard);
+        });
+
+        const completedCount = todaysQuestions.filter((_, index) => answers[String(firstQuestion + index)] !== undefined).length;
+        document.getElementById('daily-quest-progress').textContent = `Progres misi: ${completedCount} dari 2 soal selesai`;
+      };
+      const render = () => { document.getElementById('task-list').innerHTML = read().map((task, index) => `<label class="task-row ${task.done ? 'done' : ''}"><input type="checkbox" data-index="${index}" ${task.done ? 'checked' : ''} /><span>${task.done ? '✅' : '⬜'}</span><strong>${task.text}</strong></label>`).join(''); document.querySelectorAll('[data-index]').forEach(input => input.addEventListener('change', () => { const tasks = read(); tasks[Number(input.dataset.index)].done = input.checked; save(tasks); render(); })); };
+      renderDailyQuestions();
+      render();
+      document.getElementById('task-form').addEventListener('submit', event => { event.preventDefault(); const input = document.getElementById('task-input'); const tasks = read(); tasks.push({ text: input.value.trim(), done: false }); save(tasks); input.value = ''; render(); });
+    });
+  </script>
+  <script src="mascot-popover.js" defer></script>
+</body>
+</html>

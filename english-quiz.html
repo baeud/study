@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>English Quiz — BAEUDA</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="auth-pending">
+  <header class="header">
+    <div class="container nav">
+      <div class="brand">
+        <img src="logo.png" alt="BAEUDA logo" class="logo" />
+        <h1>BAEUDA</h1>
+      </div>
+      <nav class="navlinks">
+        <a href="subjects.html" class="btn ghost">Subjects</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container" style="max-width:700px;margin:40px auto;">
+    <div class="card" style="padding:2em;">
+      <div class="badge">English Quiz</div>
+      <h3 style="margin-bottom:1.5em;">Junior High School English — 10 Questions</h3>
+      <div id="quiz-area">
+        <div id="quiz-question" style="font-size:1.2em;font-weight:500;margin-bottom:1em;"></div>
+        <div id="quiz-options"></div>
+        <div id="quiz-feedback" style="margin-top:1em;color:var(--muted);min-height:2em;"></div>
+        <button class="btn brand" id="quiz-next" style="display:none;margin-top:1.5em;">Next Question</button>
+        <div id="quiz-score" style="margin-top:1.5em;font-weight:bold;"></div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <div class="container">© <span id="y"></span> BAEUDA</div>
+  </footer>
+  <script>
+    const STORAGE_KEY = localStorage.getItem('baeudaActiveProfileKey') || 'baeudaProfile';
+
+    function loadProfile() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    }
+
+    function saveProfile(profile) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      window.dispatchEvent(new CustomEvent('baeuda-profile-updated', { detail: profile }));
+    }
+
+    function addQuizXP(amount) {
+      const defaultStats = [
+        { label: 'Permainan dimainkan', value: 0 },
+        { label: 'Tantangan selesai', value: 0 },
+        { label: 'XP didapat', value: 0 }
+      ];
+      const profile = loadProfile() || { xp: 0, level: 1, stats: defaultStats };
+      profile.xp = Number(profile.xp || 0) + amount;
+      profile.stats = Array.isArray(profile.stats) ? profile.stats : defaultStats;
+      if (!profile.stats[0]) profile.stats[0] = defaultStats[0];
+      if (!profile.stats[1]) profile.stats[1] = defaultStats[1];
+      if (!profile.stats[2]) profile.stats[2] = defaultStats[2];
+      profile.stats[0].value = Number(profile.stats[0].value || 0) + 1;
+      profile.stats[2].value = Number(profile.stats[2].value || 0) + amount;
+      profile.level = Math.max(1, Math.ceil(profile.xp / 100));
+      saveProfile(profile);
+    }
+
+    const quizQuestions = [
+      { level: 'Easy', q: 'Choose the correct sentence.', options: ['She go to school every day.', 'She goes to school every day.', 'She going to school every day.', 'She gone to school every day.'], answer: 1, explain: 'The correct present simple form with “she” is “goes”.', type: 'mc' },
+      { level: 'Easy', q: 'The opposite of “happy” is ....', options: ['excited', 'sad', 'kind', 'brave'], answer: 1, explain: 'The antonym of “happy” is “sad”.', type: 'mc' },
+      { level: 'Easy', q: 'I usually ___ breakfast at 7 a.m.', options: ['eat', 'eats', 'eating', 'ate'], answer: 0, explain: 'After “I”, we use the base verb, so “eat” is correct.', type: 'mc' },
+      { level: 'Medium', q: 'Which sentence is correct?', options: ['There are many books on the table.', 'There is many books on the table.', 'There are much books on the table.', 'There is books on the table.'], answer: 0, explain: '“Books” is plural, so we use “there are”.', type: 'mc' },
+      { level: 'Medium', q: 'My father is ___ than my mother.', options: ['older', 'oldest', 'old', 'more old'], answer: 0, explain: 'For one-syllable adjectives, we add “-er” to form the comparative: “older”.', type: 'mc' },
+      { level: 'Medium', q: 'Choose the correct passive form: “The students clean the classroom every Friday.”', options: ['The classroom is cleaned by the students every Friday.', 'The classroom was cleaned by the students every Friday.', 'The classroom cleans by the students every Friday.', 'The classroom are cleaned by the students every Friday.'], answer: 0, explain: 'The present simple passive is “is/are + past participle”.', type: 'mc' },
+      { level: 'Medium', q: 'Which word is the correct past tense of “go”?', options: ['goed', 'went', 'gone', 'going'], answer: 1, explain: 'The past tense of “go” is “went”.', type: 'mc' },
+      { level: 'Hard', q: 'If I ___ you, I would study harder.', options: ['am', 'was', 'were', 'be'], answer: 2, explain: 'In a second conditional sentence, we use “were” for hypothetical situations: “If I were you...”.', type: 'mc' },
+      { level: 'Hard', q: 'Choose the best answer: “We have lived here ___ 2018.”', options: ['since', 'for', 'from', 'by'], answer: 0, explain: 'We use “since” for a starting point in time such as a year.', type: 'mc' },
+      { level: 'Hard', q: 'Which sentence uses the correct form of the adjective in a comparison?', options: ['This book is more interesting than that one.', 'This book is interestinger than that one.', 'This book is most interesting than that one.', 'This book is interest more than that one.'], answer: 0, explain: 'For longer adjectives, use “more + adjective” in comparisons.', type: 'mc' }
+    ];
+
+    let quizIndex = 0;
+    let quizScore = 0;
+
+    function showQuizQuestion() {
+      const q = quizQuestions[quizIndex];
+      document.getElementById('quiz-question').innerHTML = `<b>Question ${quizIndex+1}:</b> ${q.q}`;
+      const opts = q.options.map((opt, i) =>
+        `<button class="btn full" style="margin:.3em 0;width:100%;text-align:left;" onclick="checkQuizAnswer(${i})">${opt}</button>`
+      ).join("");
+      document.getElementById('quiz-options').innerHTML = opts;
+      document.getElementById('quiz-feedback').textContent = '';
+      document.getElementById('quiz-next').style.display = 'none';
+      document.getElementById('quiz-score').textContent = `Question ${quizIndex+1} of ${quizQuestions.length}`;
+    }
+
+    window.checkQuizAnswer = function(selected) {
+      const q = quizQuestions[quizIndex];
+      if (selected === q.answer) {
+        quizScore++;
+        document.getElementById('quiz-feedback').innerHTML = `<span style='color:var(--ok)'>Correct! 🎉</span><br><i>${q.explain}</i>`;
+      } else {
+        document.getElementById('quiz-feedback').innerHTML = `<span style='color:var(--danger)'>Wrong!</span><br>Correct answer: <b>${q.options[q.answer]}</b><br><i>${q.explain}</i>`;
+      }
+      document.getElementById('quiz-options').innerHTML = '';
+      document.getElementById('quiz-next').style.display = 'inline-block';
+      document.getElementById('quiz-score').textContent = `Score: ${quizScore} / ${quizQuestions.length}`;
+    };
+
+    document.getElementById('quiz-next').onclick = function() {
+      quizIndex++;
+      if (quizIndex < quizQuestions.length) {
+        showQuizQuestion();
+      } else {
+        addQuizXP(quizScore * 10);
+        document.getElementById('quiz-area').innerHTML = `<h4>Quiz finished!</h4><p>Your final score: <b>${quizScore} / ${quizQuestions.length}</b></p><p>You earned ${quizScore * 10} XP!</p><a href="dashboard.html" class="btn brand" style="margin-top:1em;">Back to Dashboard</a>`;
+      }
+    };
+
+    showQuizQuestion();
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+  <script type="module">import { requireAuth } from './auth-guard.js'; requireAuth(() => {});</script>
+  <script src="mascot-popover.js" defer></script>
+</body>
+</html>

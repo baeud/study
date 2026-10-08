@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>AI Tutor - BAEUDA</title><link rel="stylesheet" href="styles.css" /></head>
+<body class="focus-page auth-pending">
+  <header class="focus-topbar"><a class="focus-brand" href="dashboard.html"><span class="brand-mark">🐻</span><strong>BAEUDA</strong></a><a class="small-btn" href="features.html">← Semua fitur</a></header>
+  <main class="focus-main">
+    <section class="focus-heading"><div><p class="eyebrow">Teman belajar</p><h1>AI Tutor.</h1><p>Tulis konsep atau soal yang sedang membuatmu penasaran. Mulai dari satu pertanyaan kecil.</p></div></section>
+    <section class="focus-card focus-tutor"><div class="focus-icon">🎓</div><h2>Apa yang ingin kamu pahami?</h2><p>Tanyakan konsep pelajaran atau tulis hitungan. Jawaban akan muncul langsung.</p><form class="focus-form" id="tutor-form"><input id="tutor-question" placeholder="Contoh: Mengapa benda jatuh ke bumi?" aria-label="Tulis pertanyaan belajar" required /><button class="btn brand" type="submit">Tanya tutor</button></form><div id="tutor-answer" class="focus-answer" aria-live="polite" role="status">Halo! Tanyakan tentang gravitasi, pecahan, fotosintesis, energi, atau hitungan sederhana.</div>
+      <details class="focus-tutorial" style="margin-top:16px"><summary style="cursor:pointer;font-weight:700">Tutorial menggunakan AI Tutor</summary><ol><li>Ketik satu pertanyaan atau hitungan pada kolom di atas.</li><li>Tekan <strong>Tanya tutor</strong> atau Enter.</li><li>Baca jawaban yang langsung muncul. Jika belum pas, tambahkan detail seperti mata pelajaran atau bagian yang membingungkan.</li></ol><p>Coba: “Jelaskan fotosintesis”, “Apa itu pecahan?”, atau “12 dibagi 3”.</p></details>
+    </section>
+    <section class="focus-grid" style="margin-top:16px"><div class="focus-card"><h2>Tips bertanya</h2><ul class="focus-list"><li><span>1</span> Sebutkan topik yang belum dipahami.</li><li><span>2</span> Tambahkan contoh angka jika ada.</li><li><span>3</span> Minta penjelasan langkah demi langkah.</li></ul></div><div class="focus-card"><h2>Topik populer</h2><ul class="focus-list"><li><span>⚡</span> Energi dan gaya</li><li><span>🔢</span> Pecahan dan aljabar</li><li><span>🌱</span> Kebiasaan belajar</li></ul></div></section>
+  </main>
+  <script type="module">
+    import { requireAuth } from './auth-guard.js';
+
+    function answerQuestion(question) {
+      const normalized = question.toLowerCase();
+      const mathQuestion = normalized
+        .replace(/\b(ditambah|tambah)\b/g, '+')
+        .replace(/\b(dikurangi|kurang)\b/g, '-')
+        .replace(/\b(dikali|kali)\b/g, '*')
+        .replace(/\b(dibagi|bagi)\b/g, '/');
+      const calculation = mathQuestion.match(/(-?\d+(?:[.,]\d+)?)\s*([+\-−×x*/])\s*(-?\d+(?:[.,]\d+)?)/i);
+
+      if (calculation) {
+        const first = Number(calculation[1].replace(',', '.'));
+        const second = Number(calculation[3].replace(',', '.'));
+        const operator = calculation[2];
+        const operations = { '+': first + second, '-': first - second, '−': first - second, '*': first * second, 'x': first * second, '×': first * second, '/': first / second };
+        if ((operator === '/' && second === 0) || !Number.isFinite(operations[operator])) {
+          return 'Bilangan tidak bisa dibagi 0. Coba gunakan angka pembagi yang lain.';
+        }
+        const sign = operator === '*' || operator.toLowerCase() === 'x' ? '×' : operator === '/' ? '÷' : operator;
+        return `Hasilnya ${operations[operator]}.\n${first} ${sign} ${second} = ${operations[operator]}.`;
+      }
+
+      const lessons = [
+        { keys: ['fotosintesis', 'photosynthesis'], text: 'Fotosintesis adalah cara tumbuhan membuat makanan. Daun memakai energi cahaya matahari untuk mengubah air dan karbon dioksida menjadi gula (makanan) dan oksigen. Klorofil memberi warna hijau pada daun dan membantu menangkap cahaya.' },
+        { keys: ['gravitasi', 'gravity'], text: 'Gravitasi adalah gaya tarik antara benda-benda yang memiliki massa. Gravitasi Bumi menarik kita dan benda ke arah permukaannya. Karena itu, benda yang dilepas akan jatuh ke bawah.' },
+        { keys: ['newton', 'gaya', 'force'], text: 'Gaya adalah dorongan atau tarikan yang dapat mengubah gerak atau bentuk benda. Hukum II Newton merangkum hubungan ini dalam rumus F = m × a: gaya sama dengan massa dikali percepatan. Contoh: benda bermassa 2 kg yang dipercepat 3 m/s² memerlukan gaya 6 N.' },
+        { keys: ['pecahan', 'fraction'], text: 'Pecahan menyatakan sebagian dari satu keseluruhan. Pada 3/4, angka 3 adalah pembilang (bagian yang diambil) dan 4 adalah penyebut (jumlah bagian yang sama). Untuk menjumlahkan pecahan, samakan penyebutnya dahulu.' },
+        { keys: ['aljabar', 'variabel', 'persamaan', 'algebra'], text: 'Aljabar memakai huruf untuk mewakili bilangan yang belum diketahui. Contoh: pada x + 3 = 8, kurangi kedua sisi dengan 3, sehingga x = 5. Langkah yang sama pada kedua sisi menjaga persamaan tetap seimbang.' },
+        { keys: ['energi', 'energy'], text: 'Energi adalah kemampuan untuk melakukan kerja atau menyebabkan perubahan. Energi dapat berpindah atau berubah bentuk, tetapi tidak diciptakan atau dimusnahkan. Contoh: lampu mengubah energi listrik menjadi cahaya dan panas.' },
+        { keys: ['siklus air', 'daur air', 'water cycle'], text: 'Siklus air bergerak melalui tiga tahap utama: air menguap karena panas matahari, uap mendingin lalu mengembun menjadi awan, kemudian turun sebagai hujan. Air kembali ke sungai, tanah, dan laut, lalu siklus berulang.' },
+        { keys: ['sel', 'cell'], text: 'Sel adalah unit dasar penyusun makhluk hidup. Membran sel mengatur apa yang masuk dan keluar, inti sel menyimpan informasi genetik, dan sitoplasma menjadi tempat banyak proses berlangsung. Banyak organisme hanya memiliki satu sel, sedangkan manusia memiliki sangat banyak sel.' }
+      ];
+      const lesson = lessons.find(item => item.keys.some(key => normalized.includes(key)));
+      if (lesson) return lesson.text;
+      if (/^(hai|halo|hello|hi)[!. ]*$/.test(normalized)) return 'Halo! Aku siap membantu. Tanyakan konsep seperti gravitasi, pecahan, atau fotosintesis, atau kirim hitungan sederhana.';
+      return 'Aku belum menemukan penjelasan khusus untuk pertanyaan itu. Coba sebutkan topiknya dengan lebih spesifik, misalnya “jelaskan gravitasi”, atau kirim hitungan seperti “12 dibagi 3”.';
+    }
+
+    requireAuth(() => {
+      document.getElementById('tutor-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const question = document.getElementById('tutor-question').value.trim();
+        if (!question) return;
+        document.getElementById('tutor-answer').textContent = answerQuestion(question);
+      });
+    });
+  </script>
+  <script src="mascot-popover.js" defer></script>
+</body>
+</html>

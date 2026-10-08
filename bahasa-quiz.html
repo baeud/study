@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kuis Bahasa Indonesia — BAEUDA</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="auth-pending">
+  <header class="header">
+    <div class="container nav">
+      <div class="brand">
+        <img src="logo.png" alt="Logo BAEUDA" class="logo" />
+        <h1>BAEUDA</h1>
+      </div>
+      <nav class="navlinks">
+        <a href="subjects.html" class="btn ghost">Mata Pelajaran</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container" style="max-width:700px;margin:40px auto;">
+    <div class="card" style="padding:2em;">
+      <div class="badge">Kuis Bahasa Indonesia</div>
+      <h3 style="margin-bottom:1.5em;">Bahasa Indonesia untuk Siswa SMP — 10 Pertanyaan</h3>
+      <div id="quiz-area">
+        <div id="quiz-question" style="font-size:1.2em;font-weight:500;margin-bottom:1em;"></div>
+        <div id="quiz-options"></div>
+        <div id="quiz-feedback" style="margin-top:1em;color:var(--muted);min-height:2em;"></div>
+        <button class="btn brand" id="quiz-next" style="display:none;margin-top:1.5em;">Pertanyaan Berikutnya</button>
+        <div id="quiz-score" style="margin-top:1.5em;font-weight:bold;"></div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    <div class="container">© <span id="y"></span> BAEUDA</div>
+  </footer>
+  <script>
+    const STORAGE_KEY = localStorage.getItem('baeudaActiveProfileKey') || 'baeudaProfile';
+
+    function loadProfile() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    }
+
+    function saveProfile(profile) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      window.dispatchEvent(new CustomEvent('baeuda-profile-updated', { detail: profile }));
+    }
+
+    function addQuizXP(amount) {
+      const defaultStats = [
+        { label: 'Permainan dimainkan', value: 0 },
+        { label: 'Tantangan selesai', value: 0 },
+        { label: 'XP didapat', value: 0 }
+      ];
+      const profile = loadProfile() || { xp: 0, level: 1, stats: defaultStats };
+      profile.xp = Number(profile.xp || 0) + amount;
+      profile.stats = Array.isArray(profile.stats) ? profile.stats : defaultStats;
+      if (!profile.stats[0]) profile.stats[0] = defaultStats[0];
+      if (!profile.stats[1]) profile.stats[1] = defaultStats[1];
+      if (!profile.stats[2]) profile.stats[2] = defaultStats[2];
+      profile.stats[0].value = Number(profile.stats[0].value || 0) + 1;
+      profile.stats[2].value = Number(profile.stats[2].value || 0) + amount;
+      profile.level = Math.max(1, Math.ceil(profile.xp / 100));
+      saveProfile(profile);
+    }
+
+    const quizQuestions = [
+      { level: 'Easy', q: 'Kalimat yang menggunakan tanda baca yang tepat adalah ....', options: ['Ayah membeli buku, pensil dan penghapus.', 'Ayah membeli buku, pensil, dan penghapus.', 'Ayah membeli buku pensil dan penghapus.', 'Ayah membeli buku, pensil dan penghapus'], answer: 1, explain: 'Pada kalimat berisikan daftar benda, tanda koma digunakan sebelum kata penghubung “dan” jika daftar lebih dari dua.', type: 'mc' },
+      { level: 'Easy', q: 'Antonim kata “rajin” adalah ....', options: ['gigih', 'semangat', 'malas', 'cerdas'], answer: 2, explain: 'Antonim atau lawan kata dari rajin adalah malas.', type: 'mc' },
+      { level: 'Easy', q: 'Pemenggalan kata “memperhatikan” yang benar adalah ....', options: ['me-mper-ha-ti-kan', 'mem-per-ha-ti-kan', 'mem-per-hat-i-kan', 'mem-perha-tikan'], answer: 1, explain: 'Kata “memperhatikan” dibagi menjadi mem-per-ha-ti-kan sesuai kaidah pemenggalan suku kata.', type: 'mc' },
+      { level: 'Medium', q: 'Kalimat berikut yang merupakan kalimat efektif adalah ....', options: ['Karena hari hujan, maka kami tidak ke sekolah.', 'Kami tidak pergi ke sekolah karena hujan.', 'Karena hujan, sehingga kami tidak pergi ke sekolah.', 'Karena hari hujan kami tidak ke sekolah maka tidak masuk.'], answer: 1, explain: 'Kalimat efektif harus ringkas, jelas, dan tidak berulang. Pilihan B paling tepat dan tidak mubazir.', type: 'mc' },
+      { level: 'Medium', q: 'Bacalah kalimat berikut! “Budi rajin belajar agar dapat meraih cita-citanya.” Kata “agar” pada kalimat tersebut berfungsi sebagai ....', options: ['kata benda', 'kata penghubung tujuan', 'kata sifat', 'kata kerja'], answer: 1, explain: 'Kata “agar” menunjukkan tujuan atau maksud dari tindakan, sehingga berfungsi sebagai penghubung tujuan.', type: 'mc' },
+      { level: 'Medium', q: 'Paragraf yang kalimat utamanya berada di awal paragraf disebut paragraf ....', options: ['induktif', 'deduktif', 'campuran', 'deskriptif'], answer: 1, explain: 'Paragraf deduktif memiliki ide utama di awal kalimat dan dijelaskan oleh kalimat-kalimat selanjutnya.', type: 'mc' },
+      { level: 'Medium', q: '“Kakak menyiapkan alat tulis sebelum pergi ke sekolah.” Kata kerja pada kalimat tersebut adalah ....', options: ['kakak', 'alat tulis', 'menyiapkan', 'sekolah'], answer: 2, explain: 'Kata kerja adalah kata yang menunjukkan tindakan. Dalam kalimat itu, tindakan yang dilakukan adalah “menyiapkan”.', type: 'mc' },
+      { level: 'Hard', q: 'Bacalah teks berikut: “Setelah hujan reda, para siswa mengumpulkan sampah di halaman sekolah. Mereka membersihkan taman agar lingkungan tetap sehat.” Ide pokok paragraf tersebut adalah ....', options: ['Siswa bermain di halaman sekolah.', 'Siswa membersihkan lingkungan sekolah setelah hujan.', 'Sekolah baru saja dibangun.', 'Lingkungan sekolah sangat luas.'], answer: 1, explain: 'Paragraf itu menjelaskan kegiatan siswa yang membersihkan lingkungan sekolah setelah hujan.', type: 'mc' },
+      { level: 'Hard', q: 'Kalimat yang mengandung kata baku yang benar adalah ....', options: ['Saya berangkat ke sekolah dengan bis.', 'Saya berangkat kebe sekolah dengan bis.', 'Saya berangkat ke sekolah dengan biss.', 'Saya berangkat kesekolah dengan bis.'], answer: 0, explain: 'Penulisan kata baku yang benar adalah “ke sekolah” dan “bis” sesuai ejaan Bahasa Indonesia yang baku.', type: 'mc' },
+      { level: 'Hard', q: 'Tujuan utama menulis teks laporan adalah ....', options: ['menghibur pembaca', 'menceritakan pengalaman pribadi', 'memberikan informasi berdasarkan fakta', 'mempengaruhi pembaca agar membeli produk'], answer: 2, explain: 'Teks laporan bertujuan menyampaikan informasi yang objektif dan berdasarkan fakta.', type: 'mc' }
+    ];
+
+    let quizIndex = 0;
+    let quizScore = 0;
+
+    function showQuizQuestion() {
+      const q = quizQuestions[quizIndex];
+      document.getElementById('quiz-question').innerHTML = `<b>Pertanyaan ${quizIndex+1}:</b> ${q.q}`;
+      const opts = q.options.map((opt, i) =>
+        `<button class="btn full" style="margin:.3em 0;width:100%;text-align:left;" onclick="checkQuizAnswer(${i})">${opt}</button>`
+      ).join("");
+      document.getElementById('quiz-options').innerHTML = opts;
+      document.getElementById('quiz-feedback').textContent = '';
+      document.getElementById('quiz-next').style.display = 'none';
+      document.getElementById('quiz-score').textContent = `Pertanyaan ${quizIndex+1} dari ${quizQuestions.length}`;
+    }
+
+    window.checkQuizAnswer = function(selected) {
+      const q = quizQuestions[quizIndex];
+      if (selected === q.answer) {
+        quizScore++;
+        document.getElementById('quiz-feedback').innerHTML = `<span style='color:var(--ok)'>Benar! 🎉</span><br><i>${q.explain}</i>`;
+      } else {
+        document.getElementById('quiz-feedback').innerHTML = `<span style='color:var(--danger)'>Salah!</span><br>Jawaban benar: <b>${q.options[q.answer]}</b><br><i>${q.explain}</i>`;
+      }
+      document.getElementById('quiz-options').innerHTML = '';
+      document.getElementById('quiz-next').style.display = 'inline-block';
+      document.getElementById('quiz-score').textContent = `Skor: ${quizScore} / ${quizQuestions.length}`;
+    };
+
+    document.getElementById('quiz-next').onclick = function() {
+      quizIndex++;
+      if (quizIndex < quizQuestions.length) {
+        showQuizQuestion();
+      } else {
+        addQuizXP(quizScore * 10);
+        document.getElementById('quiz-area').innerHTML = `<h4>Kuis selesai!</h4><p>Skor akhir kamu: <b>${quizScore} / ${quizQuestions.length}</b></p><p>Kamu mendapat ${quizScore * 10} XP!</p>        <a href="dashboard.html" class="btn brand" style="margin-top:1em;">Kembali ke Dashboard</a>`;
+      }
+    };
+
+    showQuizQuestion();
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+  <script type="module">import { requireAuth } from './auth-guard.js'; requireAuth(() => {});</script>
+  <script src="mascot-popover.js" defer></script>
+</body>
+</html>
